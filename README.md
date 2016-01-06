@@ -1,6 +1,8 @@
 ## My website on surge
 It's a jekyll project adapted from a HTML5 UP theme, refixed into my thing.
+
 Source code for theme licensed under CCA3 - https://creativecommons.org/licenses/by/3.0/
+
 All text and non-code content is copyright of Kasper Holbek Jensen.
 
 ### Credits:
