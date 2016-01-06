@@ -10,7 +10,8 @@
 					<ul>
 						<li><a href="{{ site.baseurl }}/index.html">Home</a></li>
 						<li>
-							<a href="">Dropdown</a>
+							<a href="{{ site.baseurl }}/blog">Blog</a>
+							<!-- <a href="">Dropdown</a>
 							<ul>
 								<li><a href="{{ site.baseurl }}/blog">Blog</a></li>
 								<li><a href="#">Magna phasellus</a></li>
@@ -26,7 +27,7 @@
 									</ul>
 								</li>
 								<li><a href="#">Veroeros feugiat</a></li>
-							</ul>
+							</ul> -->
 						</li>
 						{% assign current = page.url | downcase | split: '/' %}
 						<li {% if current[1] == 'left-sidebar.html' %}class='current'{% endif %}><a href="{{ site.baseurl }}/left-sidebar.html">Left Sidebar</a></li>

@@ -1,3 +1,7 @@
+---
+title: I made a site!
+layout: post
+---
 And to be quite frank, that was so much harder than it could have been.
 I spend way way too much time redeploying jekyll to github pages, only to
 be met by an email claiming that page build failed, but not offering any

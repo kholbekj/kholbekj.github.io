@@ -1,5 +1,6 @@
 ---
-layout: 'default'
+title: Let's transpile!
+layout: post
 ---
 Or compile? I'm not sure anymore. A lot of effort is going into writing ruby and ending up with javascript, these days. [Opal][opal], providing the baseline, have inspired a variety of
 projects, but people I've talked to were a bit split the issue of what kind of
