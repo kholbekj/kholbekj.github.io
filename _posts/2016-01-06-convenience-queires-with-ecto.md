@@ -71,8 +71,8 @@ If we try to compile this, we'll hit an error:
     (elixir) CommonQueries.__using__([])
 {% endhighlight %}
 
-That's because the use macro expects us to define a macro on the module called \__using\__/1
-The \__using\__ macro should return the expression that should be evaluated in the calling place, in this case our function definitions.
+That's because the use macro expects us to define a macro on the module called \_\_using\_\_/1
+The \_\_using\_\_ macro should return the expression that should be evaluated in the calling place, in this case our function definitions.
 
 We can add the macro definition:
 {% highlight elixir %}
@@ -97,10 +97,10 @@ defmacro __using__(_) do
 end
 {% endhighlight %}
 
-The second part can be achieved with another macro: \__info\__/1
+The second part can be achieved with another macro: \_\_info\_\_/1
 
 
-\__info\__ takes an atom out of a few select ones, and returns some info about the environment.
+\_\_info\_\_ takes an atom out of a few select ones, and returns some info about the environment.
 In this case, we'll pass it :module which will return the surrounding module as an atom
 To make things easier, we wrap that in a function (inside the quoted expression):
 
