@@ -67,8 +67,8 @@ end
 If we try to compile this, we'll hit an error:
 
 {% highlight elixir %}
-** (UndefinedFunctionError) undefined function: Enum.__using__/1
-    (elixir) Enum.__using__([])
+** (UndefinedFunctionError) undefined function: CommonQueries.__using__/1
+    (elixir) CommonQueries.__using__([])
 {% endhighlight %}
 
 That's because the use macro expects us to define a macro on the module called \__using__/1
