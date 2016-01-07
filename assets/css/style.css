@@ -111,6 +111,12 @@
 		margin-bottom: 2em;
 	}
 
+	code
+	{
+		font-family: Courier, 'New Courier', monospace;
+		font-size: .9em;
+	}
+
 	/* Form */
 
 		form
