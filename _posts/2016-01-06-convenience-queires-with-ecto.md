@@ -1,12 +1,13 @@
 ---
 title: Creating convenience queries on Ecto models
+featured: /assets/images/flask1.jpg
 layout: post
 ---
 These days most of my free time coding is taking place in elixir, and as anyone
 who knows anything knows, that means [Phoenix][phoenix]. Phoenix is trying to
 win grounds by being Rails, but with less loading everything all the time, less
 magic, and much better performance. In many ways I'm loving it, but one of the
-first things I got really tired of was working working with my database in a
+first things I got really tired of was working with my database in a
 console. In Rails, my console sessions will often look something like this:
 
 {% highlight ruby %}
@@ -71,13 +72,13 @@ If we try to compile this, we'll hit an error:
     (elixir) CommonQueries.__using__([])
 {% endhighlight %}
 
-That's because the use macro expects us to define a macro on the module called \_\_using\_\_/1
+That's because the use macro expects us to define a macro on the module called \_\_using\_\_/1.
 The \_\_using\_\_ macro should return the expression that should be evaluated in the calling place, in this case our function definitions.
 
 We can add the macro definition:
 {% highlight elixir %}
 defmacro __using__(_) do
-  quoted do
+  quote do
   end
 end
 {% endhighlight %}
@@ -101,7 +102,7 @@ The second part can be achieved with another macro: \_\_info\_\_/1
 
 
 \_\_info\_\_ takes an atom out of a few select ones, and returns some info about the environment.
-In this case, we'll pass it :module which will return the surrounding module as an atom
+In this case, we'll pass it :module which will return the surrounding module as an atom.
 To make things easier, we wrap that in a function (inside the quoted expression):
 
 {% highlight elixir %}
