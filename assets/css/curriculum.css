@@ -59,17 +59,7 @@ Modules - reusable parts of our design
 Main components
 
 -------------------------------- */
-header {
-  height: 200px;
-  line-height: 200px;
-  text-align: center;
-  background: #303e49;
-}
-header h1 {
-  color: white;
-  font-size: 18px;
-  font-size: 1.125rem;
-}
+
 @media only screen and (min-width: 1170px) {
   header {
     height: 300px;
