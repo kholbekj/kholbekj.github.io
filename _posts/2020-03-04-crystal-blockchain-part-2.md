@@ -166,4 +166,5 @@ That's all it takes. We can now spin up `1113` and they all start working
 together.
 
 This concludes the basics of mining. Next step is to bring a real monetary
-system into those blocks of data. To be continued...
+system into those blocks of data. The current state of the code can be found
+[here](https://github.com/kholbekj/derpchain/tree/0d4b45d88885d3cda53fd2db466a20224523b67a). To be continued...
