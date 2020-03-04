@@ -1,5 +1,5 @@
 ---
-title: Crystal blockchain - beyond the basics
+title: Crystal blockchain - beyond the basics part 1
 featured: /assets/images/crystal-hallway.jpg
 layout: post
 ---
