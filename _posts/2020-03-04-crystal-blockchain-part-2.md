@@ -61,29 +61,51 @@ Alas! We have two selfish miners! Let's make them curious.
 Let's hardcode a list of discoverable node ports, and select one that's not our
 own:
 
-{% highlight bash %} PORTS = [1111, 1112] my_port = ARGV.any? ? ARGV.first.to_i
-: 3000 other_port = PORTS.find { |p| p != my_port } {% endhighlight %}
+{% highlight crystal %} PORTS = [1111, 1112]
+my_port = ARGV.any? ? ARGV.first.to_i : 3000 other_port = PORTS.find { |p| p != my_port } {% endhighlight %}
 
 We want to occasionally check other nodes to see if their chain is longer than
 ours. We can start with a new fiber which checks every 10 seconds:
 
-{% highlight bash %} spawn do loop do puts puts "Checking for new blocks" begin
-response = HTTP::Client.get "localhost:#{other_port}" body =
-JSON.parse(response.body) puts "Other chain is #{body.as_a.size} long" puts "My
-chain is #{blockchain.size} long" rescue puts "Can't connect to node with port
-#{other_port}" end sleep 10 end end {% endhighlight %}
+{% highlight crystal %}
+spawn do
+  loop do
+    puts
+    puts "Checking for new blocks"
+    begin
+      response = HTTP::Client.get "localhost:#{other_port}"
+      body = JSON.parse(response.body)
+      puts "Other chain is #{body.as_a.size} long"
+      puts "My chain is #{blockchain.size} long"
+    rescue
+      puts "Can't connect to node with port #{other_port}"
+    end
+    sleep 10
+  end
+end
+{% endhighlight %}
 
 Let the two nodes run for a little while, and one is sure to get ahead.  The
 next step is to import the chain from the other block when it gets longer than
 ours. Of course, in the real world only the blockers newer than the ones we
 already have would be needed, but it's a bit simpler to just import the chain.
 
-{% highlight bash %} puts "My chain is #{blockchain.size} long" if
-body.as_a.size > blockchain.size puts "Importing..." new_blockchain = [] of
-Block body.as_a.each do |json_block| data = json_block["data"].as_a.map(&.as_s)
-new_blockchain << Block.new( json_block["index"].as_i,
-json_block["timestamp"].as_s, data, json_block["prev_hash"].as_s) end blockchain
-= new_blockchain {% endhighlight %}
+{% highlight crystal %}
+puts "My chain is #{blockchain.size} long"
+if body.as_a.size > blockchain.size
+  puts "Importing..."
+  new_blockchain = [] of Block
+  body.as_a.each do |json_block|
+    data = json_block["data"].as_a.map(&.as_s)
+    new_blockchain << Block.new(
+      json_block["index"].as_i,
+      json_block["timestamp"].as_s,
+      data,
+      json_block["prev_hash"].as_s
+    )
+  end
+  blockchain = new_blockchain
+{% endhighlight %}
 
 As soon as the other node has a longer node, we create a fresh array of blocks,
 and parse each element of the json endpoint into a fresh block. In the end we
@@ -94,41 +116,69 @@ wouldn't catch it. It could generate a block that is actually not valid, and
 we'd happily copy the chain anyway. Let's fix that. First, let's move the json
 stuff into a method on the block to clear up our code a bit:
 
-Adding in `block.cr`: {% highlight bash %} def self.from_json(json_block :
-JSON::Any) data = json_block["data"].as_a.map(&.as_s) new_blockchain <<
-Block.new( json_block["index"].as_i, json_block["timestamp"].as_s, data,
-json_block["prev_hash"].as_s) end {% endhighlight %}
+Adding in `block.cr`:
+{% highlight crystal %}
+def self.from_json(json_block : JSON::Any)
+  data = json_block["data"].as_a.map(&.as_s)
+  new_blockchain << Block.new(
+    json_block["index"].as_i,
+    json_block["timestamp"].as_s,
+    data,
+    json_block["prev_hash"].as_s
+  )
+end
+{% endhighlight %}
 
-And in `crystal-blockchain.cr`: {% highlight bash %} puts "Importing..."
-new_blockchain = [] of Block body.as_a.each do |json_block| new_blockchain <<
-Block.from_json(json_block) end blockchain = new_blockchain puts "Imported!" {%
-endhighlight %}
+And in `crystal-blockchain.cr`:
+{% highlight crystal %}
+puts "Importing..."
+new_blockchain = [] of Block
+body.as_a.each do |json_block|
+  new_blockchain << Block.from_json(json_block)
+end
+blockchain = new_blockchain
+puts "Imported!"
+{% endhighlight %}
 
 This gives us space to validate as we go:
 
-{% highlight bash %} new_blockchain << Block.from_json(json_block) unless
-new_blockchain.size == 1 ||
-new_blockchain.last.valid?(new_blockchain.last(2).first) puts "cheats!" puts
-new_blockchain.last.render puts new_blockchain.last(2).first.render raise "Other
-node is cheating!" end {% endhighlight %}
+{% highlight crystal %}
+new_blockchain << Block.from_json(json_block)
+unless new_blockchain.size == 1 || new_blockchain.last.valid?(new_blockchain.last(2).first)
+  puts "cheats!"
+  puts new_blockchain.last.render
+  puts new_blockchain.last(2).first.render
+  raise "Other node is cheating!"
+end
+{% endhighlight %}
 
-However, as it turns out we're not importing nonce's, meaning we're getting
+However, as it turns out we're not importing nonces, meaning we're getting
 unsolved blocks. Whops. Let's add it as an initialization argument:
 
-{% highlight bash %} def initialize(@index : Int32, @timestamp : String, @data :
-Array(String), @prev_hash : String, @nonce : Int32 = 0) @hash = calculate_hash
-end {% endhighlight %}
+{% highlight crystal %}
+def initialize(@index : Int32, @timestamp : String, @data : Array(String), @prev_hash : String, @nonce : Int32 = 0)
+  @hash = calculate_hash
+end
+{% endhighlight %}
 
-Let's add it to our `.from_json` method: {% highlight bash %} def
-self.from_json(json_block : JSON::Any) data =
-json_block["data"].as_a.map(&.as_s) Block.new( json_block["index"].as_i,
-json_block["timestamp"].as_s, data, json_block["prev_hash"].as_s,
-json_block["nonce"].as_i) end {% endhighlight %}
+And then add it to our `.from_json` method:
+{% highlight crystal %}
+def self.from_json(json_block : JSON::Any)
+  data = json_block["data"].as_a.map(&.as_s)
+  Block.new(
+    json_block["index"].as_i,
+    json_block["timestamp"].as_s,
+    data,
+    json_block["prev_hash"].as_s,
+    json_block["nonce"].as_i
+  )
+end
+{% endhighlight %}
 
 In order to better track the output, I deleted the line that prints every mining
 iteration:
 
-{% highlight bash %} puts "Mining! Not solution: #{block.render}" {%
+{% highlight crystal %} puts "Mining! Not solution: #{block.render}" {%
 endhighlight %}
 
 Now when you spin two nodes up, they will start synchronizing whenever one gets
@@ -138,7 +188,7 @@ as much computation power to generate it as expected. What we have now is a
 system that is very hard to overwrite. If two people runs these two notes for a
 while, one could not easily change the state. The bad actor would have to use
 more computing power than the other node, and the longer the system runs, the
-harder to manipulate. The more nodes we add, the more difficult.
+harder to manipulate.
 
 We could extend the algorithm to work with a few more nodes if we liked. One
 more might be good, to illustrate how:
@@ -146,21 +196,40 @@ more might be good, to illustrate how:
 First, let's add the new port, and select all the foreign ports:
 
 
-{% highlight bash %} PORTS = [1111, 1112, 1113] my_port = ARGV.any? ?
-ARGV.first.to_i : 3000 other_ports = PORTS.select { |p| p != my_port } {%
-endhighlight %}
+{% highlight crystal %}
+PORTS = [1111, 1112, 1113]
+my_port = ARGV.any? ?  ARGV.first.to_i : 3000
+other_ports = PORTS.select { |p| p != my_port }
+{% endhighlight %}
 
-Then we loop around the ports: {% highlight bash %} other_ports.each do
-|other_port| begin response = HTTP::Client.get "localhost:#{other_port}" body =
-JSON.parse(response.body) puts "Other chain is #{body.as_a.size} long" puts "My
-chain is #{blockchain.size} long" if body.as_a.size > blockchain.size puts
-"Importing..." new_blockchain = [] of Block body.as_a.each do |json_block|
-new_blockchain << Block.from_json(json_block) unless new_blockchain.size == 1 ||
-new_blockchain.last.valid?(new_blockchain.last(2).first) puts "cheats!" puts
-new_blockchain.last.render puts new_blockchain.last(2).first.render raise "Other
-node is cheating!" end end blockchain = new_blockchain puts "Imported!" end
-rescue puts "Can't connect to node with port #{other_port}" end end {%
-endhighlight %}
+Then we loop around the ports:
+{% highlight crystal %}
+other_ports.each do |other_port|
+  begin
+    response = HTTP::Client.get "localhost:#{other_port}"
+    body = JSON.parse(response.body)
+    puts "Other chain is #{body.as_a.size} long"
+    puts "My chain is #{blockchain.size} long"
+    if body.as_a.size > blockchain.size
+      puts "Importing..."
+      new_blockchain = [] of Block
+      body.as_a.each do |json_block|
+        new_blockchain << Block.from_json(json_block)
+        unless new_blockchain.size == 1 || new_blockchain.last.valid?(new_blockchain.last(2).first)
+          puts "cheats!"
+          puts new_blockchain.last.render
+          puts new_blockchain.last(2).first.render
+          raise "Other node is cheating!"
+        end
+      end
+      blockchain = new_blockchain
+      puts "Imported!"
+    end
+  rescue
+    puts "Can't connect to node with port #{other_port}"
+  end
+end
+{% endhighlight %}
 
 That's all it takes. We can now spin up `1113` and they all start working
 together.
