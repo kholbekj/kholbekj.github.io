@@ -45,8 +45,10 @@ can use a commandline argument through `ARGV` - let's default to 3000 if we
 don't supply one.
 
 
-{% highlight crystal %} my_port = ARGV.any? ? ARGV.first.to_i : 3000
-Kemal.run(my_port) {% endhighlight %}
+{% highlight crystal %}
+my_port = ARGV.any? ? ARGV.first.to_i : 3000
+Kemal.run(my_port)
+{% endhighlight %}
 
 now we can spin up our server with a port:
 
@@ -61,8 +63,11 @@ Alas! We have two selfish miners! Let's make them curious.
 Let's hardcode a list of discoverable node ports, and select one that's not our
 own:
 
-{% highlight crystal %} PORTS = [1111, 1112]
-my_port = ARGV.any? ? ARGV.first.to_i : 3000 other_port = PORTS.find { |p| p != my_port } {% endhighlight %}
+{% highlight crystal %}
+PORTS = [1111, 1112]
+my_port = ARGV.any? ? ARGV.first.to_i : 3000
+other_port = PORTS.find { |p| p != my_port }
+{% endhighlight %}
 
 We want to occasionally check other nodes to see if their chain is longer than
 ours. We can start with a new fiber which checks every 10 seconds:
@@ -85,10 +90,30 @@ spawn do
 end
 {% endhighlight %}
 
-Let the two nodes run for a little while, and one is sure to get ahead.  The
-next step is to import the chain from the other block when it gets longer than
-ours. Of course, in the real world only the blockers newer than the ones we
-already have would be needed, but it's a bit simpler to just import the chain.
+In order to better track the output, I deleted the line that prints every mining
+iteration:
+
+{% highlight crystal %} puts "Mining! Not solution: #{block.render}" {%
+endhighlight %}
+
+Let the two nodes run for a little while, and we can observe in the output that
+the nodes are indeed finding eachother, and comparing chain sizes. When we run
+this for a while, a node is sure to get ahead.
+
+## Synchronizing chains
+
+The next step is to import the chain from the other block when it gets longer
+than ours. We ideally want to do this as soon as a block is mined by someone
+else. If we don't, we are working on a shorter chain, and while we might get on
+par by finding a solution - the other node is already mining on the new block,
+and might just as well find a solution as us - meaning they would keep having
+the longest chain. To make sure we don't end up with any invalid blocks and
+therefore wasted energy mining, we import the other nodes chain when it gets
+longer, and mine at the end of it.
+
+Of course, in the real world only the blocks which are newer than the ones we
+already have would need to be imported, but it's a bit simpler to just import the chain
+for now.
 
 {% highlight crystal %}
 puts "My chain is #{blockchain.size} long"
@@ -175,12 +200,6 @@ def self.from_json(json_block : JSON::Any)
 end
 {% endhighlight %}
 
-In order to better track the output, I deleted the line that prints every mining
-iteration:
-
-{% highlight crystal %} puts "Mining! Not solution: #{block.render}" {%
-endhighlight %}
-
 Now when you spin two nodes up, they will start synchronizing whenever one gets
 ahead. We know that only blockchains that are valid are getting imported, and
 herein lies the core of a blockchain: It's quite fast to validate that it took
@@ -190,11 +209,13 @@ while, one could not easily change the state. The bad actor would have to use
 more computing power than the other node, and the longer the system runs, the
 harder to manipulate.
 
+
+## Adding more nodes
+
 We could extend the algorithm to work with a few more nodes if we liked. One
 more might be good, to illustrate how:
 
 First, let's add the new port, and select all the foreign ports:
-
 
 {% highlight crystal %}
 PORTS = [1111, 1112, 1113]
